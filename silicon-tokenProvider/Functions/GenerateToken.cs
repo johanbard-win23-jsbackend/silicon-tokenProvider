@@ -33,9 +33,11 @@ public class GenerateToken(ILogger<GenerateToken> logger, ITokenService tokenSer
             using var ctsTimeOut = new CancellationTokenSource(TimeSpan.FromSeconds(120*1000));
             using var cts = CancellationTokenSource.CreateLinkedTokenSource(ctsTimeOut.Token, req.HttpContext.RequestAborted);
 
-            req.HttpContext.Request.Cookies.TryGetValue($"refreshToken-{tokenRequest.UserId}", out var refreshToken);
-            if (!string.IsNullOrEmpty(refreshToken))
-                refreshTokenResult = await _tokenService.GetRefreshTokenAsync(refreshToken, cts.Token);
+            //req.HttpContext.Request.Cookies.TryGetValue($"refreshToken-{tokenRequest.UserId}", out var refreshToken);
+            //if (!string.IsNullOrEmpty(refreshToken))
+            //    refreshTokenResult = await _tokenService.GetRefreshTokenAsync(refreshToken, cts.Token);
+
+            refreshTokenResult = await _tokenService.GetRefreshTokenIdAsync(tokenRequest.UserId, cts.Token);
 
             if (refreshTokenResult == null || refreshTokenResult.ExpiryDate < DateTime.Now.AddDays(1) || refreshTokenResult.StatusCode == 404)
                 refreshTokenResult = await _tokenGenerator.GenerateRefreshTokenAsync(tokenRequest.UserId, cts.Token);
@@ -44,13 +46,13 @@ public class GenerateToken(ILogger<GenerateToken> logger, ITokenService tokenSer
 
             accessTokenResult = _tokenGenerator.GenerateAccessToken(tokenRequest, refreshTokenResult.Token);
 
-            if(accessTokenResult != null && accessTokenResult.Token != null && refreshTokenResult.CookieOptions != null) //THIS IS WEIRD, BUT WORKS
-                req.HttpContext.Response.Cookies.Append($"refreshToken-{tokenRequest.UserId}", refreshTokenResult.Token, refreshTokenResult.CookieOptions);
+            //if(accessTokenResult != null && accessTokenResult.Token != null && refreshTokenResult.CookieOptions != null) //THIS IS WEIRD, BUT WORKS
+            //    req.HttpContext.Response.Cookies.Append($"refreshToken-{tokenRequest.UserId}", refreshTokenResult.Token, refreshTokenResult.CookieOptions);
+
+            _logger.LogWarning($"AccessToken: {accessTokenResult.Token}");
 
             if (accessTokenResult != null && accessTokenResult.Token != null && refreshTokenResult.Token != null)
                 return new OkObjectResult(new { AccessToken = accessTokenResult.Token, RefreshToken = refreshTokenResult.Token});
-
-            _logger.LogWarning($"AccessToken: {accessTokenResult.Token}");
         }
         catch (Exception ex)
         {

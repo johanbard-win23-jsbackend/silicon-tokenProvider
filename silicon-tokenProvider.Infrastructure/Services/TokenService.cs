@@ -9,6 +9,7 @@ namespace silicon_tokenProvider.Infrastructure.Services;
 public interface ITokenService
 {
     Task<RefreshTokenResult> GetRefreshTokenAsync(string refreshToken, CancellationToken cancellationToken);
+    Task<RefreshTokenResult> GetRefreshTokenIdAsync(string userId, CancellationToken cancellationToken);
     Task<bool> SaveRefreshTokenAsync(string refreshToken, string UserId, CancellationToken cancellationToken);
 }
 
@@ -56,6 +57,45 @@ public class TokenService(IDbContextFactory<DataContext> dbContextFactory) : ITo
 
     }
 
+    #endregion
+
+    #region GetRefreshTokenIdAsync
+    public async Task<RefreshTokenResult> GetRefreshTokenIdAsync(string userId, CancellationToken cancellationToken)
+    {
+        await using var context = _dbContextFactory.CreateDbContext();
+        RefreshTokenResult refreshTokenResult = null!;
+
+        try
+        {
+            var refreshTokenEntity = await context.RefreshTokens.FirstOrDefaultAsync(x => x.UserId == userId && x.ExpiryDate > DateTime.Now, cancellationToken);
+            if (refreshTokenEntity != null)
+            {
+                refreshTokenResult = new RefreshTokenResult
+                {
+                    StatusCode = (int)HttpStatusCode.OK,
+                    Token = refreshTokenEntity.RefreshToken,
+                    ExpiryDate = refreshTokenEntity.ExpiryDate
+                };
+            }
+            else
+            {
+                refreshTokenResult = new RefreshTokenResult
+                {
+                    StatusCode = (int)HttpStatusCode.NotFound,
+                    Error = "Refresh token not found or expired"
+                };
+            }
+        }
+        catch (Exception ex)
+        {
+            refreshTokenResult = new RefreshTokenResult
+            {
+                StatusCode = (int)HttpStatusCode.InternalServerError,
+                Error = $"GetRefreshTokenAsync failed :: {ex.Message}"
+            };
+        }
+        return refreshTokenResult;
+    }
     #endregion
 
     #region SaveRefreshTokenAsync
