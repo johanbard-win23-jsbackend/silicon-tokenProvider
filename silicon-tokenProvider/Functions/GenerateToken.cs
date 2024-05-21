@@ -40,7 +40,7 @@ public class GenerateToken(ILogger<GenerateToken> logger, ITokenService refreshT
 
             accessTokenResult = _tokenGenerator.GenerateAccessToken(tokenRequest, refreshTokenResult.Token);
 
-            if(accessTokenResult != null && accessTokenResult.Token != null && refreshTokenResult.CookieOptions != null) //THIS IS WEIRD
+            if(accessTokenResult != null && accessTokenResult.Token != null && refreshTokenResult.CookieOptions != null) //THIS IS WEIRD, BUT WORKS
                 req.HttpContext.Response.Cookies.Append("refreshToken", refreshTokenResult.Token, refreshTokenResult.CookieOptions);
 
             if (accessTokenResult != null && accessTokenResult.Token != null && refreshTokenResult.Token != null)
