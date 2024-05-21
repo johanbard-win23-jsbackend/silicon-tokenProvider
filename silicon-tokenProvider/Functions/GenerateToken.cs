@@ -23,7 +23,8 @@ public class GenerateToken(ILogger<GenerateToken> logger, ITokenService tokenSer
         if (tokenRequest == null || tokenRequest.UserId == null || tokenRequest.Email == null)
             return new BadRequestObjectResult(new { Error = "Please provide a valid user id and email" });
 
-        _logger.LogWarning(tokenRequest.ToString());
+        _logger.LogWarning($"UserId: {tokenRequest.UserId}");
+        _logger.LogWarning($"Email: {tokenRequest.Email}");
         try
         {
             RefreshTokenResult refreshTokenResult = null!;
@@ -32,30 +33,30 @@ public class GenerateToken(ILogger<GenerateToken> logger, ITokenService tokenSer
             using var ctsTimeOut = new CancellationTokenSource(TimeSpan.FromSeconds(120*1000));
             using var cts = CancellationTokenSource.CreateLinkedTokenSource(ctsTimeOut.Token, req.HttpContext.RequestAborted);
 
-            req.HttpContext.Request.Cookies.TryGetValue("refreshToken", out var refreshToken);
+            req.HttpContext.Request.Cookies.TryGetValue($"refreshToken-{tokenRequest.UserId}", out var refreshToken);
             if (!string.IsNullOrEmpty(refreshToken))
                 refreshTokenResult = await _tokenService.GetRefreshTokenAsync(refreshToken, cts.Token);
 
             if (refreshTokenResult == null || refreshTokenResult.ExpiryDate < DateTime.Now.AddDays(1) || refreshTokenResult.StatusCode == 404)
                 refreshTokenResult = await _tokenGenerator.GenerateRefreshTokenAsync(tokenRequest.UserId, cts.Token);
 
+            _logger.LogWarning($"RefreshToken: {refreshTokenResult.Token}");
+
             accessTokenResult = _tokenGenerator.GenerateAccessToken(tokenRequest, refreshTokenResult.Token);
 
             if(accessTokenResult != null && accessTokenResult.Token != null && refreshTokenResult.CookieOptions != null) //THIS IS WEIRD, BUT WORKS
-                req.HttpContext.Response.Cookies.Append("refreshToken", refreshTokenResult.Token, refreshTokenResult.CookieOptions);
+                req.HttpContext.Response.Cookies.Append($"refreshToken-{tokenRequest.UserId}", refreshTokenResult.Token, refreshTokenResult.CookieOptions);
 
             if (accessTokenResult != null && accessTokenResult.Token != null && refreshTokenResult.Token != null)
                 return new OkObjectResult(new { AccessToken = accessTokenResult.Token, RefreshToken = refreshTokenResult.Token});
 
-            _logger.LogWarning(accessTokenResult.Token);
+            _logger.LogWarning($"AccessToken: {accessTokenResult.Token}");
         }
         catch (Exception ex)
         {
             _logger.LogError($"[Function(\"GenerateToken\")] :: {ex.Message}");
             return new ObjectResult(new { Error = $"Function GenerateToken failed :: {ex.Message}" }) { StatusCode = 500 };
         }
-
-        
 
         return new ObjectResult(new { Error = "Function GenerateToken failed, no valid TokenResult" }) { StatusCode = 500 };
     }
