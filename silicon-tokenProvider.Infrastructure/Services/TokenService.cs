@@ -49,7 +49,7 @@ public class TokenService(IDbContextFactory<DataContext> dbContextFactory) : ITo
             refreshTokenResult = new RefreshTokenResult
             {
                 StatusCode = (int)HttpStatusCode.InternalServerError,
-                Error = "GetRefreshTokenAsync failed"
+                Error = $"GetRefreshTokenAsync failed {ex.Message}"
             };
         }
         return refreshTokenResult;
