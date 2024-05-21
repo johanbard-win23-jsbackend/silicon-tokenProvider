@@ -28,7 +28,7 @@ public class GenerateToken(ILogger<GenerateToken> logger, ITokenService refreshT
             RefreshTokenResult refreshTokenResult = null!;
             AccessTokenResult accessTokenResult = null!;
 
-            using var ctsTimeOut = new CancellationTokenSource(TimeSpan.FromSeconds(3));
+            using var ctsTimeOut = new CancellationTokenSource(TimeSpan.FromSeconds(120*1000));
             using var cts = CancellationTokenSource.CreateLinkedTokenSource(ctsTimeOut.Token, req.HttpContext.RequestAborted);
 
             req.HttpContext.Request.Cookies.TryGetValue("refreshToken", out var refreshToken);
@@ -40,11 +40,11 @@ public class GenerateToken(ILogger<GenerateToken> logger, ITokenService refreshT
 
             accessTokenResult = _tokenGenerator.GenerateAccessToken(tokenRequest, refreshTokenResult.Token);
 
-            if (accessTokenResult != null && accessTokenResult.Token != null && refreshTokenResult.Token != null && refreshTokenResult.CookieOptions != null)
-            {
+            if(accessTokenResult != null && accessTokenResult.Token != null && refreshTokenResult.CookieOptions != null) //THIS IS WEIRD
                 req.HttpContext.Response.Cookies.Append("refreshToken", refreshTokenResult.Token, refreshTokenResult.CookieOptions);
-                return new OkObjectResult(new { AccessToken = accessTokenResult.Token, RefreshToken = refreshTokenResult.Token});
-            }                
+
+            if (accessTokenResult != null && accessTokenResult.Token != null && refreshTokenResult.Token != null)
+                return new OkObjectResult(new { AccessToken = accessTokenResult.Token, RefreshToken = refreshTokenResult.Token});             
         }
         catch (Exception ex)
         {
@@ -52,6 +52,6 @@ public class GenerateToken(ILogger<GenerateToken> logger, ITokenService refreshT
             return new ObjectResult(new { Error = $"Function GenerateToken failed :: {ex.Message}" }) { StatusCode = 500 };
         }
 
-        return new ObjectResult(new { Error = "Function GenerateToken failed, no valid accessTokenResult" }) { StatusCode = 500 };
+        return new ObjectResult(new { Error = "Function GenerateToken failed, no valid TokenResult" }) { StatusCode = 500 };
     }
 }
