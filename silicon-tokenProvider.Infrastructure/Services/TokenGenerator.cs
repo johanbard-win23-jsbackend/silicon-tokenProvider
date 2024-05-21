@@ -13,9 +13,9 @@ public interface ITokenGenerator
     AccessTokenResult GenerateAccessToken(TokenRequest tokenRequest, string? refreshToken);
 }
 
-public class TokenGenerator(IRefreshTokenService refreshTokenService) : ITokenGenerator
+public class TokenGenerator(ITokenService refreshTokenService) : ITokenGenerator
 {
-    private readonly IRefreshTokenService _refreshTokenService = refreshTokenService;
+    private readonly ITokenService _refreshTokenService = refreshTokenService;
 
     #region GenerateRefreshTokenAsync
     public async Task<RefreshTokenResult> GenerateRefreshTokenAsync(string userId, CancellationToken cancellationToken)

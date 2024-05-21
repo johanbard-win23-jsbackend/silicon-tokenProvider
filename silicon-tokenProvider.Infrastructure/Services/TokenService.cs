@@ -6,13 +6,13 @@ using System.Net;
 
 namespace silicon_tokenProvider.Infrastructure.Services;
 
-public interface IRefreshTokenService
+public interface ITokenService
 {
     Task<RefreshTokenResult> GetRefreshTokenAsync(string refreshToken, CancellationToken cancellationToken);
     Task<bool> SaveRefreshTokenAsync(string refreshToken, string UserId, CancellationToken cancellationToken);
 }
 
-public class RefreshTokenService(IDbContextFactory<DataContext> dbContextFactory) : IRefreshTokenService
+public class TokenService(IDbContextFactory<DataContext> dbContextFactory) : ITokenService
 {
     private readonly IDbContextFactory<DataContext> _dbContextFactory = dbContextFactory;
 
