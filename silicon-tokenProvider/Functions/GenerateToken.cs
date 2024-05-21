@@ -23,8 +23,6 @@ public class GenerateToken(ILogger<GenerateToken> logger, ITokenService tokenSer
         if (tokenRequest == null || tokenRequest.UserId == null || tokenRequest.Email == null)
             return new BadRequestObjectResult(new { Error = "Please provide a valid user id and email" });
 
-        _logger.LogWarning($"UserId: {tokenRequest.UserId}");
-        _logger.LogWarning($"Email: {tokenRequest.Email}");
         try
         {
             RefreshTokenResult refreshTokenResult = null!;
@@ -42,14 +40,10 @@ public class GenerateToken(ILogger<GenerateToken> logger, ITokenService tokenSer
             if (refreshTokenResult == null || refreshTokenResult.ExpiryDate < DateTime.Now.AddDays(1) || refreshTokenResult.StatusCode == 404)
                 refreshTokenResult = await _tokenGenerator.GenerateRefreshTokenAsync(tokenRequest.UserId, cts.Token);
 
-            _logger.LogWarning($"RefreshToken: {refreshTokenResult.Token}");
-
             accessTokenResult = _tokenGenerator.GenerateAccessToken(tokenRequest, refreshTokenResult.Token);
 
             if(accessTokenResult != null && accessTokenResult.Token != null && refreshTokenResult.CookieOptions != null) //THIS IS WEIRD, BUT WORKS
                 req.HttpContext.Response.Cookies.Append($"refreshToken-{tokenRequest.UserId}", refreshTokenResult.Token, refreshTokenResult.CookieOptions);
-
-            _logger.LogWarning($"AccessToken: {accessTokenResult.Token}");
 
             if (accessTokenResult != null && accessTokenResult.Token != null && refreshTokenResult.Token != null)
                 return new OkObjectResult(new { AccessToken = accessTokenResult.Token, RefreshToken = refreshTokenResult.Token});
