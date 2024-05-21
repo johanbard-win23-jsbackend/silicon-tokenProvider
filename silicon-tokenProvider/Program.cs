@@ -18,7 +18,7 @@ var host = new HostBuilder()
         });
 
         services.AddScoped<ITokenService, TokenService>();
-        services.AddScoped<ITokenGenerator, TokenGenerator>();
+        services.AddScoped<ITokenGenerator, TokenGenerator>(); 
     })
     .Build();
 
