@@ -8,10 +8,10 @@ using silicon_tokenProvider.Infrastructure.Services;
 
 namespace silicon_tokenProvider.Functions;
 
-public class GenerateToken(ILogger<GenerateToken> logger, ITokenService refreshTokenService, ITokenGenerator tokenGenerator)
+public class GenerateToken(ILogger<GenerateToken> logger, ITokenService tokenService, ITokenGenerator tokenGenerator)
 {
     private readonly ILogger<GenerateToken> _logger = logger;
-    private readonly ITokenService _refreshTokenService = refreshTokenService;
+    private readonly ITokenService _tokenService = tokenService;
     private readonly ITokenGenerator _tokenGenerator = tokenGenerator;
 
     [Function("GenerateToken")]
@@ -31,26 +31,31 @@ public class GenerateToken(ILogger<GenerateToken> logger, ITokenService refreshT
             using var ctsTimeOut = new CancellationTokenSource(TimeSpan.FromSeconds(120*1000));
             using var cts = CancellationTokenSource.CreateLinkedTokenSource(ctsTimeOut.Token, req.HttpContext.RequestAborted);
 
-            req.HttpContext.Request.Cookies.TryGetValue("refreshToken", out var refreshToken);
-            if (!string.IsNullOrEmpty(refreshToken))
-                refreshTokenResult = await _refreshTokenService.GetRefreshTokenAsync(refreshToken, cts.Token);
+            //req.HttpContext.Request.Cookies.TryGetValue("refreshToken", out var refreshToken);
+            //if (!string.IsNullOrEmpty(refreshToken))
+            //    refreshTokenResult = await _tokenService.GetRefreshTokenAsync(refreshToken, cts.Token);
 
             if (refreshTokenResult == null || refreshTokenResult.ExpiryDate < DateTime.Now.AddDays(1))
                 refreshTokenResult = await _tokenGenerator.GenerateRefreshTokenAsync(tokenRequest.UserId, cts.Token);
 
             accessTokenResult = _tokenGenerator.GenerateAccessToken(tokenRequest, refreshTokenResult.Token);
 
-            if(accessTokenResult != null && accessTokenResult.Token != null && refreshTokenResult.CookieOptions != null) //THIS IS WEIRD, BUT WORKS
-                req.HttpContext.Response.Cookies.Append("refreshToken", refreshTokenResult.Token, refreshTokenResult.CookieOptions);
+            //if(accessTokenResult != null && accessTokenResult.Token != null && refreshTokenResult.CookieOptions != null) //THIS IS WEIRD, BUT WORKS
+            //    req.HttpContext.Response.Cookies.Append("refreshToken", refreshTokenResult.Token, refreshTokenResult.CookieOptions);
 
             if (accessTokenResult != null && accessTokenResult.Token != null && refreshTokenResult.Token != null)
-                return new OkObjectResult(new { AccessToken = accessTokenResult.Token, RefreshToken = refreshTokenResult.Token});             
+                return new OkObjectResult(new { AccessToken = accessTokenResult.Token, RefreshToken = refreshTokenResult.Token});
+
+            _logger.LogWarning(refreshTokenResult.Token);
+            _logger.LogWarning(accessTokenResult.Token);
         }
         catch (Exception ex)
         {
             _logger.LogError($"[Function(\"GenerateToken\")] :: {ex.Message}");
             return new ObjectResult(new { Error = $"Function GenerateToken failed :: {ex.Message}" }) { StatusCode = 500 };
         }
+
+        
 
         return new ObjectResult(new { Error = "Function GenerateToken failed, no valid TokenResult" }) { StatusCode = 500 };
     }
