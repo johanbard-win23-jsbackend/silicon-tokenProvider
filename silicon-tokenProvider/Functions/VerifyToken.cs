@@ -22,20 +22,20 @@ namespace silicon_tokenProvider.Functions
         [Function("VerifyToken")]
         public async Task<IActionResult> Run([HttpTrigger(AuthorizationLevel.Function, "post", Route = "token/verify")] HttpRequest req)
         {
-            var body = await new StreamReader(req.Body).ReadToEndAsync();
-            var verifyTokenRequest = JsonConvert.DeserializeObject<VerifyTokenRequest>(body);
+            var authToken = req.Headers.Authorization.ToString();
             
             try
             {
-                if (verifyTokenRequest != null && verifyTokenRequest.AccessToken != null && verifyTokenRequest.RefreshToken != null)
+                if (authToken != null)
                 {
-                    _logger.LogWarning(verifyTokenRequest.AccessToken);
-                    _logger.LogWarning(verifyTokenRequest.RefreshToken);
+                    int i = authToken.IndexOf(" ") + 1;
+                    authToken = authToken.Substring(i);
+                    _logger.LogWarning(authToken);
 
                     using var ctsTimeOut = new CancellationTokenSource(TimeSpan.FromSeconds(120 * 1000));
                     using var cts = CancellationTokenSource.CreateLinkedTokenSource(ctsTimeOut.Token, req.HttpContext.RequestAborted);
 
-                    var res = await _tokenVerifier.VerifyTokenAsync(verifyTokenRequest.RefreshToken, cts.Token);
+                    var res = await _tokenVerifier.VerifyTokenAsync(authToken, cts.Token);
 
                     if (res.StatusCode == 200)
                         return new OkResult();

@@ -6,26 +6,30 @@ namespace silicon_tokenProvider.Infrastructure.Services;
 
 public interface ITokenVerifier
 {
-    Task<VerifyTokenResult> VerifyTokenAsync(string refreshToken, CancellationToken cancellationToken);
+    Task<VerifyTokenResult> VerifyTokenAsync(string authToken, CancellationToken cancellationToken);
 }
 
 public class TokenVerifier(IDbContextFactory<DataContext> dbContextFactory) : ITokenVerifier
 {
     private readonly IDbContextFactory<DataContext> _dbContextFactory = dbContextFactory;
 
-    public async Task<VerifyTokenResult> VerifyTokenAsync(string refreshToken, CancellationToken cancellationToken)
+    public async Task<VerifyTokenResult> VerifyTokenAsync(string authToken, CancellationToken cancellationToken)
     {
-        await using var context = _dbContextFactory.CreateDbContext();
-
         try
         {
-            var res = await context.RefreshTokens.LastOrDefaultAsync(x => x.RefreshToken == refreshToken, cancellationToken);
+            await using var context = _dbContextFactory.CreateDbContext();
 
-            if (res != null && res.RefreshToken != null && res.ExpiryDate > DateTime.Now)
-                return new VerifyTokenResult 
-                {
-                    StatusCode = 200,
-                };
+            var results = await context.RefreshTokens.Where(x => x.RefreshToken == authToken).ToListAsync(cancellationToken);
+
+            foreach (var res in results)
+            {
+                if (res != null && res.RefreshToken != null && res.ExpiryDate > DateTime.Now)
+                    return new VerifyTokenResult
+                    {
+                        StatusCode = 200,
+                    };
+            }
+            
         }
         catch(Exception ex)
         {
