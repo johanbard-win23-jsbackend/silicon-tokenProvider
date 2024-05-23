@@ -3,9 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.9.34902.65
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "silicon-tokenProvider", "silicon-tokenProvider\silicon-tokenProvider.csproj", "{D1BA1234-3664-4530-84B9-7C9C4B1E03A6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "silicon-tokenProvider", "silicon-tokenProvider\silicon-tokenProvider.csproj", "{D1BA1234-3664-4530-84B9-7C9C4B1E03A6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "silicon-tokenProvider.Infrastructure", "silicon-tokenProvider.Infrastructure\silicon-tokenProvider.Infrastructure.csproj", "{A89E030F-344E-4C07-8F81-B14E8106691D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "silicon-tokenProvider.Infrastructure", "silicon-tokenProvider.Infrastructure\silicon-tokenProvider.Infrastructure.csproj", "{A89E030F-344E-4C07-8F81-B14E8106691D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
