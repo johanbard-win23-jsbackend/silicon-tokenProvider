@@ -20,6 +20,7 @@ var host = new HostBuilder()
         services.AddScoped<ITokenService, TokenService>();
         services.AddScoped<ITokenGenerator, TokenGenerator>();
         services.AddScoped<ITokenVerifier, TokenVerifier>();
+        services.AddScoped<IUserRetriever, UserRetriever>();
     })
     .Build();
 
