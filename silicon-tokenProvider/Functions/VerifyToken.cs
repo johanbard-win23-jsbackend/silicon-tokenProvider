@@ -1,6 +1,8 @@
+using Grpc.Core;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Functions.Worker;
+using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using silicon_tokenProvider.Infrastructure.Models;
@@ -38,7 +40,10 @@ namespace silicon_tokenProvider.Functions
                     var res = await _tokenVerifier.VerifyTokenAsync(authToken, cts.Token);
 
                     if (res.StatusCode == 200)
-                        return new OkResult();
+                    {
+                        return new OkObjectResult(new { StatusCode = 200 });
+                    }
+                    
                     else if (res.StatusCode == 401)
                     {
                         _logger.LogWarning(res.Error);
