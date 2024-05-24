@@ -20,7 +20,7 @@ public class UserRetriever(IDbContextFactory<DataContext> dbContextFactory) : IU
         {
             await using var context = _dbContextFactory.CreateDbContext();
 
-            var results = await context.RefreshTokens.Where(x => x.RefreshToken == authToken).ToListAsync(cancellationToken);
+            var results = await context.RefreshTokens.Where(x => x.RefreshToken == authToken).ToListAsync(cts);
 
             foreach (var res in results)
             {
