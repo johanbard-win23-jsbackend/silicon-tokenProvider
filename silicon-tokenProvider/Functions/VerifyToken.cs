@@ -32,7 +32,7 @@ namespace silicon_tokenProvider.Functions
                 {
                     int i = authToken.IndexOf(" ") + 1;
                     authToken = authToken.Substring(i);
-                    _logger.LogWarning(authToken);
+                    //_logger.LogWarning(authToken);
 
                     using var ctsTimeOut = new CancellationTokenSource(TimeSpan.FromSeconds(120 * 1000));
                     using var cts = CancellationTokenSource.CreateLinkedTokenSource(ctsTimeOut.Token, req.HttpContext.RequestAborted);
