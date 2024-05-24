@@ -18,7 +18,7 @@ public class GetUserFromToken
     }
 
     [Function("GetUserFromToken")]
-    public async Task<IActionResult> Run([HttpTrigger(AuthorizationLevel.Function, "get", "post")] HttpRequest req)
+    public async Task<IActionResult> Run([HttpTrigger(AuthorizationLevel.Function, "post")] HttpRequest req)
     {
         var authToken = req.Headers.Authorization.ToString();
 
